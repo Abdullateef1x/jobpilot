@@ -34,13 +34,19 @@ class Application(ApplicationBase, table=True):
     user_id: int = Field(foreign_key="user.id")
     job_description: str | None = None
     user: Optional["User"]= Relationship(back_populates="applications")
-
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    match_score: float | None = None 
+    match_explanation: str | None = None
 
 
 class ApplicationRead(ApplicationBase):
     application_id: uuid.UUID
-    match_score: float
-    match_explanation: str
-    created_at: datetime 
+    match_score: float | None = None
+    match_explanation: str | None = None
+    created_at: datetime
+    updated_at: datetime 
 
 
+class ApplicationStatusUpdate(SQLModel):
+    status: ApplicationStatus

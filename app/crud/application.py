@@ -1,3 +1,6 @@
+import uuid
+from datetime import datetime, timezone
+
 from sqlmodel import Session, select
 
 from app.models.application import Application, ApplicationCreate, ApplicationStatus
@@ -7,7 +10,7 @@ def get_applications_by_user(db: Session, user_id) -> list[Application]:
     statement = select(Application).where(Application.user_id == user_id)
     return list(db.exec(statement).all())  
 
-def get_application_by_id(db: Session, application_id, user_id) -> Application | None:    
+def get_application_by_id(db: Session, application_id:uuid.UUID, user_id) -> Application | None:    
     statement = select(Application).where(Application.application_id == application_id).where(Application.user_id == user_id)
     result = db.exec(statement).first()
     return result
@@ -33,3 +36,28 @@ def create_application(db: Session, application_in: ApplicationCreate, user_id) 
 
     return application
 
+def update_application_status(db: Session, application_id, user_id, new_status) -> Application | None:
+    application = get_application_by_id(db, application_id, user_id) 
+
+    
+    if application:
+        application.status = new_status
+        application.updated_at = datetime.now(timezone.utc)  
+        db.commit()
+        db.refresh(application)
+
+
+    return application
+
+
+
+def delete_application(db: Session, application_id, user_id) -> dict:
+    application = get_application_by_id(db, application_id, user_id) 
+
+    if not application:
+        return {"ok": False}
+
+    db.delete(application)
+    db.commit()
+
+    return {"ok": True}

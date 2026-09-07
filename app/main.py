@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import app.models
 from app.api.applications import router as application_router
 from app.api.auth import router as auth_router
+from app.api.users import router as user_router
 from app.config import setting
 from app.core.database import create_db_and_tables
 
@@ -39,6 +40,8 @@ app.add_middleware(
 app.include_router(auth_router)
 
 app.include_router(application_router)
+
+app.include_router(user_router)
 
 # 2. Basic root route
 @app.get("/")

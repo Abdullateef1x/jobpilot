@@ -26,3 +26,11 @@ def create_user(db: Session, user_in: UserCreate) -> User:
 def get_user_by_uuid(db: Session, user_id) -> User | None:
     statement = select(User).where(User.user_id == user_id)
     return db.exec(statement).first()
+
+
+def update_user_resume_key(db, user, key):
+    
+    user.current_resume_key = key
+
+    db.commit()
+    db.refresh(user)

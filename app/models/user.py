@@ -32,7 +32,7 @@ class User(UserBase, table= True):
     password_hash: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
-    current_resume_url: str | None = Field(default=None)
+    current_resume_key: str | None = Field(default=None)
     applications: list["Application"] = Relationship(back_populates="user")      
 
 class UserRead(UserBase):

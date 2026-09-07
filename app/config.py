@@ -11,6 +11,12 @@ ACCESS_TOKEN_EXPIRES_MINUTES = 30
 class Settings(BaseSettings):
     DATABASE_URL: str
     SECRET_KEY: str
+    R2_ACCOUNT_ID: str
+    R2_ACCESS_KEY_ID: str
+    R2_SECRET_ACCESS_KEY: str 
+    R2_BUCKET_NAME: str
+    ENDPOINT_URL: str
+
 
     model_config = SettingsConfigDict(env_file=os.path.join(BASE_DIR, ".env"), env_file_encoding="utf-8")
 

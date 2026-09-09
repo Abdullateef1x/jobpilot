@@ -65,10 +65,10 @@ def parse_resume(resume_text: str) -> dict:
       "description": string or null
     }
   ] or [],
-  "contact": [{
+  "contact": {
     "email": string or null,
     "phone": string or null
-  }] or []             
+  } or null          
 } Return only the JSON object. No explanation, no markdown, no extra text."""
     
     

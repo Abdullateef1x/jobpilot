@@ -1,8 +1,9 @@
 import uuid
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pydantic import EmailStr
+from sqlalchemy import JSON, Column
 from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
@@ -33,6 +34,7 @@ class User(UserBase, table= True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     current_resume_key: str | None = Field(default=None)
+    parsed_resume_data: dict[str, Any] | None = Field(default=None, sa_column=Column(JSON))
     applications: list["Application"] = Relationship(back_populates="user")      
 
 class UserRead(UserBase):

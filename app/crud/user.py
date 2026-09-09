@@ -28,9 +28,10 @@ def get_user_by_uuid(db: Session, user_id) -> User | None:
     return db.exec(statement).first()
 
 
-def update_user_resume_key(db, user, key):
-    
+def update_user_resume(db, user, key, parsed_data):
+
     user.current_resume_key = key
+    user.parsed_resume_data = parsed_data
 
     db.commit()
     db.refresh(user)

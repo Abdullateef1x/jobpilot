@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     R2_SECRET_ACCESS_KEY: str 
     R2_BUCKET_NAME: str
     ENDPOINT_URL: str
+    GROQ_API_KEY: str
 
 
     model_config = SettingsConfigDict(env_file=os.path.join(BASE_DIR, ".env"), env_file_encoding="utf-8")

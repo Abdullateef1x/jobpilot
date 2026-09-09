@@ -1,6 +1,5 @@
 import logging
 import mimetypes
-import uuid
 
 import boto3
 from botocore.exceptions import ClientError

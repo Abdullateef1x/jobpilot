@@ -9,6 +9,7 @@ from app.crud.application import (
    delete_application,
    get_application_by_id,
    get_applications_by_user,
+   update_application_match,
    update_application_status,
 )
 from app.models.application import (
@@ -16,20 +17,25 @@ from app.models.application import (
    ApplicationRead,
    ApplicationStatusUpdate,
 )
+from app.services.ai import generate_match_assessment
 from app.services.deps import get_current_user
 
 router = APIRouter(prefix="/applications", tags=["applications"])
 
 @router.post("", response_model=ApplicationRead)
-async def create_applications(payload: ApplicationCreate,  db: Session = Depends(get_session), current_user = Depends(get_current_user)):
+async def create_applications(payload: ApplicationCreate, db: Session = Depends(get_session), current_user = Depends(get_current_user)):
+    application = create_application(db, payload, current_user.id)
 
-   application = create_application(db, payload, current_user.id)
-   return application
+    if current_user.parsed_resume_data is not None:
+        assessment = generate_match_assessment(current_user.parsed_resume_data, payload.job_description)
+        update_application_match(db, application.application_id, current_user.id, assessment["match_score"], assessment["match_explanation"])
+
+    return application
 
 
 @router.get("", response_model=list[ApplicationRead])
 async def get_applications(db: Session = Depends(get_session), current_user = Depends(get_current_user)):
-   
+
    applications = get_applications_by_user(db, current_user.id)
 
    return applications
@@ -76,4 +82,4 @@ async def delete(application_id: uuid.UUID, db: Session = Depends(get_session), 
             status_code=404,
             detail="Application not found"
         )
-        
+      

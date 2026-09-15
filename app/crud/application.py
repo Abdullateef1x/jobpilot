@@ -16,8 +16,9 @@ def get_application_by_id(db: Session, application_id:uuid.UUID, user_id) -> App
     return result
 
 
-def create_application(db: Session, application_in: ApplicationCreate, user_id) -> Application | None:
+def create_application(db: Session, application_in: ApplicationCreate, user_id) -> Application:
 
+    
 
     application = Application (
     user_id=user_id,
@@ -25,7 +26,7 @@ def create_application(db: Session, application_in: ApplicationCreate, user_id) 
     company_name=application_in.company_name,
     job_description_url=application_in.job_description_url,
     status= ApplicationStatus.Applied,
-    job_description=None
+    job_description=application_in.job_description
     )
 
 
@@ -35,6 +36,21 @@ def create_application(db: Session, application_in: ApplicationCreate, user_id) 
     db.refresh(application)
 
     return application
+
+def update_application_match(db: Session, application_id: uuid.UUID,  user_id, match_score: float, match_explanation: str ) -> Application | None:
+
+
+    application = get_application_by_id(db, application_id, user_id) 
+
+
+    if application:
+        application.match_score = match_score
+        application.match_explanation= match_explanation
+        db.commit()
+        db.refresh(application)
+    
+    return application
+
 
 def update_application_status(db: Session, application_id, user_id, new_status) -> Application | None:
     application = get_application_by_id(db, application_id, user_id) 

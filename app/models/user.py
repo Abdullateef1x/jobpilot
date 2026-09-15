@@ -40,4 +40,3 @@ class User(UserBase, table= True):
 class UserRead(UserBase):
         user_id: uuid.UUID
         created_at: datetime 
-

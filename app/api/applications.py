@@ -1,34 +1,39 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlmodel import Session
 
 from app.core.database import get_session
 from app.crud.application import (
-   create_application,
-   delete_application,
-   get_application_by_id,
-   get_applications_by_user,
-   update_application_match,
-   update_application_status,
+    create_application,
+    delete_application,
+    get_application_by_id,
+    get_applications_by_user,
+    update_application_status,
 )
 from app.models.application import (
-   ApplicationCreate,
-   ApplicationRead,
-   ApplicationStatusUpdate,
+    ApplicationCreate,
+    ApplicationRead,
+    ApplicationStatusUpdate,
 )
-from app.services.ai import generate_match_assessment
+from app.services.ai import process_application_scoring
 from app.services.deps import get_current_user
 
 router = APIRouter(prefix="/applications", tags=["applications"])
 
 @router.post("", response_model=ApplicationRead)
-async def create_applications(payload: ApplicationCreate, db: Session = Depends(get_session), current_user = Depends(get_current_user)):
+async def create_applications(payload: ApplicationCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_session), current_user = Depends(get_current_user)):
     application = create_application(db, payload, current_user.id)
 
     if current_user.parsed_resume_data is not None:
-        assessment = generate_match_assessment(current_user.parsed_resume_data, payload.job_description)
-        update_application_match(db, application.application_id, current_user.id, assessment["match_score"], assessment["match_explanation"])
+        background_tasks.add_task( 
+           process_application_scoring,
+              application.application_id,
+              current_user.id,
+              current_user.parsed_resume_data,
+              payload.job_description
+           )
+        
 
     return application
 

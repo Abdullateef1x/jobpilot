@@ -46,6 +46,7 @@ def update_application_match(db: Session, application_id: uuid.UUID,  user_id, m
     if application:
         application.match_score = match_score
         application.match_explanation= match_explanation
+        application.updated_at = datetime.now(timezone.utc)  
         db.commit()
         db.refresh(application)
     

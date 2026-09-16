@@ -1,12 +1,16 @@
 import json
 import logging
 import math
+import uuid
 
 import pymupdf as fitz
 import requests
 from groq import Groq
+from sqlmodel import Session
 
 from app.config import setting
+from app.core.database import get_engine
+from app.crud.application import update_application_match
 
 logger = logging.getLogger(__name__)
 
@@ -247,6 +251,13 @@ def generate_match_assessment(parsed_resume_data: dict, job_description: str) ->
         }
         except Exception as fallbackerror:  # noqa: BLE001
             raise RuntimeError(f"Failed to generate fallback assessment: {fallbackerror}")  # noqa: TRY004
+        
+
+def process_application_scoring(application_id: uuid.UUID, user_id: int, parsed_resume_data: dict, job_description: str):
+    engine = get_engine()
+    with Session(engine) as session:
+        assessment = generate_match_assessment(parsed_resume_data, job_description)
+        update_application_match(session, application_id, user_id, assessment["match_score"], assessment["match_explanation"])
 
 
       

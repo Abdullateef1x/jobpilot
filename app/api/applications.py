@@ -9,6 +9,7 @@ from app.crud.application import (
     delete_application,
     get_application_by_id,
     get_applications_by_user,
+    get_top_matches_by_user,
     update_application_status,
 )
 from app.models.application import (
@@ -44,6 +45,13 @@ async def get_applications(db: Session = Depends(get_session), current_user = De
    applications = get_applications_by_user(db, current_user.id)
 
    return applications
+
+@router.get("/top-matches", response_model=list[ApplicationRead])
+async def get_top_matches(db: Session = Depends(get_session), current_user = Depends(get_current_user)):
+    
+    applications = get_top_matches_by_user(db, current_user.id)
+    
+    return applications
 
 
 # GET /applications/{application_id}

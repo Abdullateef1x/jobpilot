@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlmodel import Session, select
+from sqlmodel import Session, desc, select
 
 from app.models.application import Application, ApplicationCreate, ApplicationStatus
 
@@ -9,6 +9,15 @@ from app.models.application import Application, ApplicationCreate, ApplicationSt
 def get_applications_by_user(db: Session, user_id) -> list[Application]:
     statement = select(Application).where(Application.user_id == user_id)
     return list(db.exec(statement).all())  
+
+def get_top_matches_by_user(db: Session, user_id: int) -> list[Application]:
+    statement = (
+        select(Application)
+        .where(Application.user_id == user_id)
+        .order_by(desc(Application.match_score).nullslast())
+    )
+    return list(db.exec(statement).all())
+
 
 def get_application_by_id(db: Session, application_id:uuid.UUID, user_id) -> Application | None:    
     statement = select(Application).where(Application.application_id == application_id).where(Application.user_id == user_id)

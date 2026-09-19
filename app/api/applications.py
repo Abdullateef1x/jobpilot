@@ -10,6 +10,7 @@ from app.crud.application import (
     get_application_by_id,
     get_applications_by_user,
     get_top_matches_by_user,
+    update_application_cover_letter,
     update_application_status,
 )
 from app.models.application import (
@@ -17,7 +18,7 @@ from app.models.application import (
     ApplicationRead,
     ApplicationStatusUpdate,
 )
-from app.services.ai import process_application_scoring
+from app.services.ai import generate_cover_letter, process_application_scoring
 from app.services.deps import get_current_user
 
 router = APIRouter(prefix="/applications", tags=["applications"])
@@ -52,6 +53,22 @@ async def get_top_matches(db: Session = Depends(get_session), current_user = Dep
     applications = get_top_matches_by_user(db, current_user.id)
     
     return applications
+
+@router.post("/{application_id}/cover-letter", response_model=ApplicationRead)
+async def create_cover_letter(application_id: uuid.UUID, db: Session = Depends(get_session),  current_user = Depends(get_current_user)): 
+      
+      application = get_application_by_id(db, application_id, current_user.id)
+
+      
+      if not application:
+         raise HTTPException(status_code=404, detail="Application not found")
+
+      cover_letter = generate_cover_letter(current_user.parsed_resume_data, application.job_description)
+
+      updated_application = update_application_cover_letter(db, application_id, current_user.id, cover_letter) 
+
+      return updated_application
+    
 
 
 # GET /applications/{application_id}

@@ -76,6 +76,21 @@ def update_application_status(db: Session, application_id, user_id, new_status) 
     return application
 
 
+def update_application_cover_letter(db, application_id, user_id, cover_letter: str) -> Application | None:
+
+    application = get_application_by_id(db, application_id, user_id)
+
+    if application:
+        application.cover_letter = cover_letter
+        application.updated_at = datetime.now(timezone.utc)  
+        db.commit()
+        db.refresh(application)
+
+    return application
+
+
+
+
 
 def delete_application(db: Session, application_id, user_id) -> dict:
     application = get_application_by_id(db, application_id, user_id) 

@@ -260,4 +260,62 @@ def process_application_scoring(application_id: uuid.UUID, user_id: int, parsed_
         update_application_match(session, application_id, user_id, assessment["match_score"], assessment["match_explanation"])
 
 
-      
+def generate_cover_letter(parsed_resume_data: dict, job_description: str) -> str:
+    client = Groq(api_key=setting.GROQ_API_KEY)
+
+    prompt = """You are an expert at generating a structured cover letter for a job application.
+Please write a professional, tailored cover letter based on the resume data provided. 
+
+Analyze the candidate's resume data and the provided job description. Extract the job title and company name dynamically to build the letter. 
+
+You must return your entire response as a valid JSON string object wrapped in a single key named "cover_letter". Do not output raw text outside of this JSON structure.
+
+Structure and Tone Guidelines for the cover letter value:
+* Paragraph 1 (Introduction): State the role you are applying for and a strong hook highlighting your core professional identity.
+* Paragraph 2 (Value & Fit): Connect your specific past achievements and skills directly to the company's needs. Use real data from the resume.
+* Paragraph 3 (Company Interest): Briefly explain why you want to work for this specific company. 
+* Paragraph 4 (Closing): Express enthusiasm, summarize your value, and include a clear call to action.
+
+Strict Fact & Context Constraints:
+* Do not invert applicant requirements into company descriptions. If a technology or skill (e.g., AI/LLM APIs, vector search) is listed as a candidate requirement or a "nice to have," do not describe it as a "company commitment," "mission," or "vision" unless the job description explicitly calls it that.
+* Keep company interest grounded. If details about the company's product roadmap are scarce, anchor Paragraph 3 cleanly to their engineering stack, their focus on building scalable architecture, or the operational nature of the role title.
+* Tone: Confident, professional, and engaging (avoid overly robotic or cliché AI phrases or large vocabularies).
+* Length: Maximum 300 words.
+
+Response Schema Format:
+{
+  "cover_letter": "Your complete 4-paragraph cover letter goes here as a single string with standard newline characters."
+}
+"""
+
+    response = client.chat.completions.create(
+        model="openai/gpt-oss-120b",
+        messages=[
+            {"role": "system", "content": prompt},
+            {
+                "role": "user",
+                "content": f"Generate a professional cover letter from this candidate's resume:\n\n{parsed_resume_data}\n\nagainst this description:\n\n{job_description}"
+            }
+        ],
+        response_format={"type": "json_object"},
+        temperature=0.0
+    )
+    
+    raw_output = response.choices[0].message.content
+
+    if not raw_output:                                       # ← guard here, before the try
+        raise ValueError("Groq returned an empty response")
+
+    try:
+        parsed_json = json.loads(raw_output)
+        cover_letter_string = parsed_json.get("cover_letter", "")
+        
+        if not isinstance(cover_letter_string, str):
+            raise ValueError(f"Expected string, got {type(cover_letter_string)}")  # noqa: TRY004
+        
+        return cover_letter_string
+    
+    except Exception as e:  # noqa: BLE001
+        raise ValueError(f"LLM returned invalid structure: {e}\nRaw: {raw_output}")
+
+
